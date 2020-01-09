@@ -82,11 +82,13 @@ namespace TournamentFormGenerator.ViewModel
                 {
                     using (var pen = new Pen(Color.Black, 1))
                     {
-                        int startPosition = 35;
-                        int margin = 14;
-                        int barMargin = 8;
                         int cellWidth = 732 / cellsOnXAxis;
                         int celHeight = 1060 / cellsOnYAxis;
+
+                        int startPosition = 35;
+                        int margin = cellWidth * 57 / 1000; // ~14 (3x5)
+                        int marginTop = celHeight * 132 / 1000; // ~ 28 (3x5)
+                        int barMargin = 10;
 
                         for (int j = 0; j < cellsOnYAxis; j++)
                         {
@@ -101,7 +103,7 @@ namespace TournamentFormGenerator.ViewModel
                                     var innerWidth = cellWidth - 2 * margin;
 
                                     var captionPosX = innerPosX;
-                                    var captionPosY = cellTopPosition + margin;
+                                    var captionPosY = cellTopPosition + marginTop;
 
                                     var barPosX = innerPosX;
                                     var barPosY = captionPosY + smallFontSize + barMargin;
@@ -120,8 +122,9 @@ namespace TournamentFormGenerator.ViewModel
                                     //g.DrawRectangle(pen, barPosX, barPosY, barWidth, barHeight);
 
                                     // Big number
-                                    var xPos = questionFrm.EndToEndQuestionId < 10 ? cellLeftPosition + cellWidth / 3 : cellLeftPosition + cellWidth / 4;
-                                    g.DrawString(questionFrm.EndToEndQuestionId.ToString(), largeFnt, Brushes.LightGray, (int)xPos, cellTopPosition + celHeight / 3);
+                                    var numPosX = questionFrm.EndToEndQuestionId < 10 ? cellLeftPosition + cellWidth / 3 : cellLeftPosition + cellWidth / 4;
+                                    var numPosY = cellTopPosition + celHeight / 3;
+                                    g.DrawString(questionFrm.EndToEndQuestionId.ToString(), largeFnt, Brushes.LightGray, (int)numPosX, numPosY);
                                 }
                             }
                         }

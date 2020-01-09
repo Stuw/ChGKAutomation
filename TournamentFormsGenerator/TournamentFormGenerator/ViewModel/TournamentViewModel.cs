@@ -296,7 +296,7 @@ namespace TournamentFormGenerator.ViewModel
                 if (form != null)
                 {
                     var width = UseSize_4x9 ? 4 : 3;
-                    var height = UseSize_4x9 ? 9 : 6;
+                    var height = UseSize_4x9 ? 9 : 5;
                     form.Print(g, width, height);
                 }
                 PrintingProgress = QuestionForms.Count - QuestionForms.Count(t => !t.IsProcessed);

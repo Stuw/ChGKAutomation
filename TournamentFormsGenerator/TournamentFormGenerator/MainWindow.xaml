@@ -117,7 +117,7 @@
 
         <Label Content="Расположение бланков на листе"  HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Stretch" Grid.Row="6"/>
         <StackPanel Grid.Column="1" Grid.Row="6"  VerticalAlignment="Stretch" Orientation="Horizontal" >
-            <RadioButton Content="3x6"  IsChecked="{Binding Converter={StaticResource BoolToOppositeBoolConverter}, Path=UseSize_4x9}" Margin="4,4,4,4" GroupName="Size"></RadioButton>
+            <RadioButton Content="3x5"  IsChecked="{Binding Converter={StaticResource BoolToOppositeBoolConverter}, Path=UseSize_4x9}" Margin="4,4,4,4" GroupName="Size"></RadioButton>
             <RadioButton Content="4x9"  IsChecked="{Binding UseSize_4x9}" Margin="4,4,4,4" GroupName="Size"></RadioButton>
         </StackPanel>
 
