@@ -73,35 +73,53 @@ namespace TournamentFormGenerator.ViewModel
 
         public void Print(Graphics g, int cellsOnXAxis, int cellsOnYAxis)
         {
-            using (Font fnt = new Font("Arial", 36 / cellsOnXAxis))
+            int smallFontSize = 36 / cellsOnXAxis;
+            int largeFontSize = 200 / cellsOnXAxis;
+
+            using (Font fnt = new Font("Arial", smallFontSize))
             {
-                using (Font largeFnt = new Font("Arial", 200 / cellsOnXAxis))
+                using (Font largeFnt = new Font("Arial", largeFontSize))
                 {
                     using (var pen = new Pen(Color.Black, 1))
                     {
                         int startPosition = 35;
-                        int margin = 4;
+                        int margin = 14;
+                        int barMargin = 8;
                         int cellWidth = 732 / cellsOnXAxis;
                         int celHeight = 1060 / cellsOnYAxis;
+
                         for (int j = 0; j < cellsOnYAxis; j++)
                         {
                             for (int i = 0; i < cellsOnXAxis; i++)
                             {
-
                                 if (!IsProcessed)
                                 {
                                     var cellLeftPosition = i * cellWidth + startPosition;
                                     var cellTopPosition = j * celHeight + startPosition;
+
+                                    var innerPosX = cellLeftPosition + margin;
+                                    var innerWidth = cellWidth - 2 * margin;
+
+                                    var captionPosX = innerPosX;
+                                    var captionPosY = cellTopPosition + margin;
+
+                                    var barPosX = innerPosX;
+                                    var barPosY = captionPosY + smallFontSize + barMargin;
+                                    var barHeight = celHeight / 8;
+                                    var barWidth = innerWidth;
+
+                                    // Outer rect
                                     g.DrawRectangle(pen, cellLeftPosition, cellTopPosition, cellWidth, celHeight);
+
+                                    // Caption
                                     var questionFrm = Headers.Dequeue();
-                                    g.DrawString(questionFrm.Caption, fnt, System.Drawing.Brushes.Black, cellLeftPosition + margin, cellTopPosition + margin);
-                                    //g.DrawImage(questionFrm.BarCode, cellLeftPosition + cellWidth / 7, cellTopPosition + celHeight / 5);
+                                    g.DrawString(questionFrm.Caption, fnt, System.Drawing.Brushes.Black, captionPosX, captionPosY);
+
                                     // Draw in rectangle
-                                    var barX = cellLeftPosition + cellWidth / 18;
-                                    var barY = cellTopPosition + celHeight / 6;
-                                    g.DrawImage(questionFrm.BarCode, new Rectangle(barX, barY, cellWidth * 3 / 4, celHeight / 8));
+                                    g.DrawImage(questionFrm.BarCode, new Rectangle(barPosX, barPosY, barWidth, barHeight));
+                                    //g.DrawRectangle(pen, barPosX, barPosY, barWidth, barHeight);
 
-
+                                    // Big number
                                     var xPos = questionFrm.EndToEndQuestionId < 10 ? cellLeftPosition + cellWidth / 3 : cellLeftPosition + cellWidth / 4;
                                     g.DrawString(questionFrm.EndToEndQuestionId.ToString(), largeFnt, Brushes.LightGray, (int)xPos, cellTopPosition + celHeight / 3);
                                 }
@@ -109,9 +127,6 @@ namespace TournamentFormGenerator.ViewModel
                         }
                     }
                 }
-
-
-
             }
         }
     }
