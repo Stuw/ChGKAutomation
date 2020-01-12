@@ -122,8 +122,8 @@ namespace TournamentFormGenerator.ViewModel
                                     //g.DrawRectangle(pen, barPosX, barPosY, barWidth, barHeight);
 
                                     // Big number
-                                    var numPosX = questionFrm.EndToEndQuestionId < 10 ? cellLeftPosition + cellWidth / 3 : cellLeftPosition + cellWidth / 4;
-                                    var numPosY = cellTopPosition + celHeight / 3;
+                                    var numPosX = questionFrm.EndToEndQuestionId < 10 ? cellLeftPosition + cellWidth / 3 : cellLeftPosition + cellWidth * 22 / 100;
+                                    var numPosY = cellTopPosition + celHeight * 5 / 12;
                                     g.DrawString(questionFrm.EndToEndQuestionId.ToString(), largeFnt, Brushes.LightGray, (int)numPosX, numPosY);
                                 }
                             }
