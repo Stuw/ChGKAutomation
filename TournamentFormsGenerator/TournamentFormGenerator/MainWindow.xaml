@@ -40,6 +40,7 @@
             <RowDefinition />
             <RowDefinition />
             <RowDefinition />
+            <RowDefinition />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition  />
@@ -112,20 +113,24 @@
             <RadioButton Content="По командам"  IsChecked="{Binding Converter={StaticResource BoolToOppositeBoolConverter}, Path=GroupByQuestion}" Margin="4,4,4,4" GroupName="Grouping"></RadioButton>
             <RadioButton Content="По вопросам"  IsChecked="{Binding GroupByQuestion}" Margin="4,4,4,4" GroupName="Grouping"></RadioButton>
         </StackPanel>
-
-
-
-        <Label Content="Расположение бланков на листе"  HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Stretch" Grid.Row="6"/>
         <StackPanel Grid.Column="1" Grid.Row="6"  VerticalAlignment="Stretch" Orientation="Horizontal" >
+            <RadioButton Content="Подряд          "  IsChecked="{Binding Converter={StaticResource BoolToOppositeBoolConverter}, Path=GroupForCutter}" Margin="4,4,4,4" GroupName="Cutter" IsEnabled="{Binding Converter={StaticResource BoolToOppositeBoolConverter}, Path=GroupByQuestion}"></RadioButton>
+            <RadioButton Content="Под резак (горизонт.)"  IsChecked="{Binding GroupForCutter}" Margin="4,4,4,4" GroupName="Cutter" IsEnabled="{Binding Converter={StaticResource BoolToOppositeBoolConverter}, Path=GroupByQuestion}"></RadioButton>
+        </StackPanel>
+
+
+
+        <Label Content="Расположение бланков на листе"  HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Stretch" Grid.Row="7"/>
+        <StackPanel Grid.Column="1" Grid.Row="7"  VerticalAlignment="Stretch" Orientation="Horizontal" >
             <RadioButton Content="3x5"  IsChecked="{Binding Converter={StaticResource BoolToOppositeBoolConverter}, Path=UseSize_4x9}" Margin="4,4,4,4" GroupName="Size"></RadioButton>
             <RadioButton Content="4x9"  IsChecked="{Binding UseSize_4x9}" Margin="4,4,4,4" GroupName="Size"></RadioButton>
         </StackPanel>
 
-        <Button Grid.Row="7"  Content="Печатать бланки" 
+        <Button Grid.Row="8"  Content="Печатать бланки" 
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
              Grid.Column="1"
                 Command="{Binding PrintCommand}" ToolTip="Отправляет бланки на печать на выбранный принтер"></Button>
-        <Button  Grid.Row="7" Content="Сохранить таблицу учета" 
+        <Button  Grid.Row="8" Content="Сохранить таблицу учета" 
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
                 Command="{Binding OpenSpreadsheetCommand}" ToolTip="Сохраняет незаполненный шаблон таблицы учета результатов"></Button>
 

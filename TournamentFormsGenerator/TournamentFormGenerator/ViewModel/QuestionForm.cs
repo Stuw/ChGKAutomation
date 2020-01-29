@@ -21,7 +21,7 @@ namespace TournamentFormGenerator.ViewModel
             {
                 //var result = Code128Rendering.MakeBarcodeImage(RoundId.ToString() + QuestionId.ToString("D2") + TeamId.ToString("D2"), 1, true);
                 // Make it wider and shring on drawing
-                var result = Code128Rendering.MakeBarcodeImage(RoundId.ToString() + QuestionId.ToString("D2") + TeamId.ToString("D2"), 2, true);
+                var result = Code128Rendering.MakeBarcodeImage(RoundId.ToString() + QuestionId.ToString("D2") + TeamId.ToString("D2"), 3, true);
                 return result;
             }
         }

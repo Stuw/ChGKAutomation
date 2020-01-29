@@ -241,9 +241,21 @@ namespace TournamentFormGenerator.ViewModel
                                 }
                                 else
                                 {
-                                    for (int teamId = TeamsRangeBegin; teamId <= TeamsRangeEnd; teamId++)
-                                        QuestionForms.Add(
-                                            AnswersCollection.BuildGroupedByTeam(teamId, RoundsCount, QuestionsPerRound, ItemHeaderTemplate));
+                                    var width = UseSize_4x9 ? 4 : 3;
+                                    var height = UseSize_4x9 ? 9 : 5;
+
+                                    if (GroupForCutter)
+                                    {
+                                        QuestionForms =
+                                            AnswersCollection.BuildGroupedByTeamForCutter(TeamsRangeBegin, TeamsRangeEnd, RoundsCount, QuestionsPerRound, ItemHeaderTemplate,
+                                                                                    width, height);
+                                    }
+                                    else
+                                    {
+                                        for (int teamId = TeamsRangeBegin; teamId <= TeamsRangeEnd; teamId++)
+                                            QuestionForms.Add(
+                                                AnswersCollection.BuildGroupedByTeam(teamId, RoundsCount, QuestionsPerRound, ItemHeaderTemplate));
+                                    }
                                 }
 
 
@@ -413,6 +425,28 @@ namespace TournamentFormGenerator.ViewModel
         }
 
 
+        public const string GroupForCutterPropertyName = "GroupForCutter";
+
+        private bool _GroupForCutter = false;
+
+        /// <summary>
+        /// Gets the GroupForCutter property.
+        /// Property's value raise the PropertyChanged event.
+        /// </summary>
+        public bool GroupForCutter
+        {
+            get
+            {
+                return _GroupForCutter;
+            }
+            set
+            {
+                if (_GroupForCutter == value)
+                    return;
+                _GroupForCutter = value;
+                RaisePropertyChanged(GroupForCutterPropertyName);
+            }
+        }
 
 
 

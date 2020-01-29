@@ -33,6 +33,46 @@ namespace TournamentFormGenerator.ViewModel
             }
             return result;
         }
+
+        public static List<AnswersCollection> BuildGroupedByTeamForCutter(int teamStart, int teamEnd, int RoundsCount, int QuestionsPerRound, string headerTemplate,
+                                                            int cellsOnXAxis, int cellsOnYAxis)
+        {
+            var result = new List<AnswersCollection>();
+
+            for (int roundId = 1; roundId <= RoundsCount; roundId++)
+            {
+                var teamsCount = teamEnd - teamStart + 1;
+
+                for (int teamId = teamStart; teamId <= teamEnd; teamId += cellsOnYAxis)
+                {
+                    for (int queryId = 1; queryId <= (QuestionsPerRound + cellsOnXAxis - 1) / cellsOnXAxis; queryId += 1)
+                    {
+                        var resultItem = new AnswersCollection();
+                        resultItem.Headers = new Queue<QuestionForm>(RoundsCount * QuestionsPerRound); // ?
+
+                        for (int row = 0; row < cellsOnYAxis; row += 1)
+                        {
+                            for (int col = 0; col < cellsOnXAxis; col += 1)
+                            {
+                                resultItem.Headers.Enqueue(new QuestionForm()
+                                {
+                                    QuestionId = queryId + col * cellsOnYAxis,
+                                    RoundId = roundId,
+                                    TeamId = teamId + row,
+                                    EndToEndQuestionId = (roundId - 1) * QuestionsPerRound + queryId + col * cellsOnYAxis,
+                                    HeaderTemplate = headerTemplate
+                                });
+                            }
+                        }
+
+                        result.Add(resultItem);
+                    }
+                }
+            }
+
+            return result;
+        }
+
         public static List<AnswersCollection> BuildGroupedByQuestion(int teamStart, int teamEnd, int RoundsCount, int QuestionsPerRound, string headerTemplate)
         {
             var result = new List<AnswersCollection>();
@@ -70,10 +110,9 @@ namespace TournamentFormGenerator.ViewModel
         }
 
 
-
         public void Print(Graphics g, int cellsOnXAxis, int cellsOnYAxis)
         {
-            int smallFontSize = 36 / cellsOnXAxis;
+            int smallFontSize = 33 / cellsOnXAxis;
             int largeFontSize = 200 / cellsOnXAxis;
 
             using (Font fnt = new Font("Arial", smallFontSize))
@@ -105,10 +144,10 @@ namespace TournamentFormGenerator.ViewModel
                                     var captionPosX = innerPosX;
                                     var captionPosY = cellTopPosition + marginTop;
 
-                                    var barPosX = innerPosX;
+                                    var barHeight = celHeight / 10;
+                                    var barWidth = innerWidth * 3 / 4;
+                                    var barPosX = innerPosX + (cellWidth / 2) - margin - (barWidth / 2);
                                     var barPosY = captionPosY + smallFontSize + barMargin;
-                                    var barHeight = celHeight / 8;
-                                    var barWidth = innerWidth;
 
                                     // Outer rect
                                     g.DrawRectangle(pen, cellLeftPosition, cellTopPosition, cellWidth, celHeight);
