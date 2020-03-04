@@ -121,8 +121,6 @@
             <RadioButton Content="4x9"  IsChecked="{Binding UseSize_4x9}" Margin="4,4,4,4" GroupName="Size"></RadioButton>
         </StackPanel>
 
-
-
         <Button Grid.Row="7"  Content="Печатать бланки" 
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
              Grid.Column="1"

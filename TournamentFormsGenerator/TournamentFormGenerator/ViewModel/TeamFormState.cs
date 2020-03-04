@@ -95,7 +95,11 @@ namespace TournamentFormGenerator.ViewModel
                                     g.DrawRectangle(pen, cellLeftPosition, cellTopPosition, cellWidth, celHeight);
                                     var questionFrm = Headers.Dequeue();
                                     g.DrawString(questionFrm.Caption, fnt, System.Drawing.Brushes.Black, cellLeftPosition + margin, cellTopPosition + margin);
-                                    g.DrawImage(questionFrm.BarCode, cellLeftPosition + cellWidth / 7, cellTopPosition + celHeight / 5);
+                                    //g.DrawImage(questionFrm.BarCode, cellLeftPosition + cellWidth / 7, cellTopPosition + celHeight / 5);
+                                    // Draw in rectangle
+                                    var barX = cellLeftPosition + cellWidth / 18;
+                                    var barY = cellTopPosition + celHeight / 6;
+                                    g.DrawImage(questionFrm.BarCode, new Rectangle(barX, barY, cellWidth * 3 / 4, celHeight / 8));
 
 
                                     var xPos = questionFrm.EndToEndQuestionId < 10 ? cellLeftPosition + cellWidth / 3 : cellLeftPosition + cellWidth / 4;

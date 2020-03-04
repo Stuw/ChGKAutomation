@@ -366,7 +366,7 @@ namespace TournamentFormGenerator.ViewModel
         /// </summary>
         public const string UseSize_4x9PropertyName = "UseSize_4x9";
 
-        private bool _UseSize_4x9 = true;
+        private bool _UseSize_4x9 = false;
 
         /// <summary>
         /// Gets the UseSize_4x9 property.
