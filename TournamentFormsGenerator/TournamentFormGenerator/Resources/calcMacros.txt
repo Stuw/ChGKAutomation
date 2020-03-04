@@ -1,0 +1,792 @@
+﻿ 
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+
+rem удаление листов турнира
+Sub ClearTournament
+on error goto handler
+	magicCell =	ThisComponent.Sheets(0).getCellByPosition(1,0)
+	barCodeListener = CreateUnoListener( "BarCodeInput_", "com.sun.star.util.XModifyListener" ) 
+	magicCell.removeModifyListener( barCodeListener )
+
+
+	sheetsCount =  ThisComponent.Sheets.Count - 1
+	for i=1 to sheetsCount
+		ThisComponent.Sheets.removeByName(ThisComponent.Sheets(1).Name )
+	next i
+
+rem	ThisComponent.Sheets.removeByName("Итоги")
+handler:
+	Reset
+End Sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+
+Function QuestionsPerRound as Integer
+	QuestionsPerRound = ThisComponent.Sheets(0).getCellByPosition(1,2).Value
+End Function
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+
+Function RoundsCount as Integer
+	RoundsCount =  ThisComponent.Sheets(0).getCellByPosition(1,1).Value
+End Function
+
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+
+Function TeamsCount as Integer
+	TeamsCount = ThisComponent.Sheets(0).getCellByPosition(1,3).Value
+End Function
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem создание всех листов турнира
+
+Sub CreateTournament
+	Dim Doc as Object
+	Dim SummarySheet as Object
+	
+	Dim tournamentName As String
+	
+	Doc = ThisComponent
+	SummarySheet = Doc.Sheets(0)
+	tournamentName = SummarySheet.getCellByPosition(1,0).String
+
+	rem область ячеек со списком команд
+	teamsStartRow = 1
+	teamsEndRow =  TeamsCount + teamsStartRow 
+	teamsStartColumn = 2
+	teamsEndColumn = teamsStartColumn + 1
+	Dim teamsSourceRangeAddress as New com.sun.star.table.CellRangeAddress
+	teamsSourceRangeAddress.Sheet = 0
+	teamsSourceRangeAddress.StartColumn = teamsStartColumn
+	teamsSourceRangeAddress.StartRow = teamsStartRow
+	teamsSourceRangeAddress.EndColumn = teamsEndColumn
+	teamsSourceRangeAddress.EndRow = teamsEndRow	
+		
+	 rem создаём листы туров
+	 For i=1 TO RoundsCount
+	 	CreateRoundPage( i, teamsSourceRangeAddress )
+	 Next i
+	 
+	 CreateTotalsPage( teamsSourceRangeAddress )
+	 
+	MsgBox "Завершено"
+	
+End Sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem расчет результатов турнира
+
+Sub CalculateTournamentResult
+	Dim Doc as Object
+	Dim SummarySheet as Object
+	
+	Dim tournamentName As String
+	
+	Doc = ThisComponent
+	SummarySheet = Doc.Sheets(0)
+	tournamentName = SummarySheet.getCellByPosition(1,0).String
+
+	rem область ячеек со списком команд
+	teamsStartRow = 1
+	teamsEndRow =  TeamsCount + teamsStartRow 
+	teamsStartColumn = 2
+	teamsEndColumn = teamsStartColumn + 1
+	Dim teamsSourceRangeAddress as New com.sun.star.table.CellRangeAddress
+	teamsSourceRangeAddress.Sheet = 0
+	teamsSourceRangeAddress.StartColumn = teamsStartColumn
+	teamsSourceRangeAddress.StartRow = teamsStartRow
+	teamsSourceRangeAddress.EndColumn = teamsEndColumn
+	teamsSourceRangeAddress.EndRow = teamsEndRow	
+		
+	CreateTotalsPage( teamsSourceRangeAddress )
+	 
+	MsgBox "Завершено"
+	
+End Sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem получение рейтинга вопроса
+
+Function GetQuestionRating( roundNumber as Integer, questionNumber as Integer ) as Integer
+	sheet = ThisComponent.Sheets.getByName("Тур " + roundNumber )
+	columnId = questionNumber + 1
+	result = TeamsCount
+	for i=0 to TeamsCount
+		cell = sheet.getCellByPosition( columnId, i+3 )
+		if( cell.Value=1 ) then
+			result = result-1
+		endif
+	next i
+	GetQuestionRating = result
+End Function
+
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem получение номера строки команды по номеру команды. 
+rem Возвращается номер команды в списке страницы туров.
+
+Function GetTeamRowNum( teamId ) as Integer
+	STATIC lastTeamId as Integer
+	STATIC lastResult as Integer
+	result = -1
+
+	if lastTeamId = teamId then
+		result = lastResult
+	else
+		for i=2 to 100
+			teamIdCell = ThisComponent.Sheets(0).getCellByPosition(2, i)
+			if teamIdCell.String = teamId then
+				result = i+1
+				goto funcend
+			endif
+		next i
+	endif
+
+funcend:
+	lastTeamId = teamId
+	lastResult = result
+	GetTeamRowNum = result 
+End Function
+
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem получение номера колонки по номеру вопроса
+
+Function GetQuestionColumnNum( questionId ) as Integer
+	GetQuestionColumnNum = questionId + 1
+End Function
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem получение рейтинга команды
+
+Function GetTeamRaiting( teamId as Integer ) as Integer
+	result = 0
+
+	rem считаем рейтинг в каждом туре
+	for roundId=1 to RoundsCount
+		sheet = ThisComponent.Sheets(i)
+		for questionId=1 to QuestionsPerRound
+			if TeamAnsweredQuestion( teamId, roundId, questionId ) then
+				result = result + GetQuestionRating( roundId, questionId )
+			endif
+		next questionId
+	next roundId
+	
+	GetTeamRaiting = result
+End Function
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem проверяет, взяла ли заданная команда вопрос
+
+Function TeamAnsweredQuestion( teamId as Integer, roundId as Integer, questionId as Integer ) as Boolean
+
+	sheet = ThisComponent.Sheets(roundId )
+	cell = sheet.getCellByPosition( GetQuestionColumnNum( questionId ), GetTeamRowNum( teamId ) )
+	TeamAnsweredQuestion = (cell.Value=1) 
+End Function
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem создание листа тура
+
+Sub CreateRoundPage ( roundNumber as Integer, teamsSourceRangeAddress as Object )
+		Dim topLeftAddress
+		Dim bottomRightAddress
+		
+		Doc = ThisComponent
+		rem новый лист
+		Dim roundSheet as Object
+		roundName = "Тур " + roundNumber
+		if Doc.Sheets.Count()<=roundNumber  then
+			roundSheet = Doc.createInstance("com.sun.star.sheet.Spreadsheet")
+		 	Doc.Sheets.insertByName(roundName, roundSheet)
+		else
+			roundSheet = Doc.Sheets.getByName(roundName)
+		endif
+		
+	 	
+		roundSheet.getCellByPosition(0,0).String = roundName
+		
+		rem копируем список команд с первой страницы
+		Dim targetTeamsCellAddress As New com.sun.star.table.CellAddress
+		targetTeamsCellAddress.Sheet = roundNumber
+		targetTeamsCellAddress.Column = 0
+		targetTeamsCellAddress.Row = 2
+		roundSheet.copyRange( targetTeamsCellAddress, teamsSourceRangeAddress )
+		roundSheet.Columns(0).Width = 1000
+		roundSheet.Columns(1).OptimalWidth = true
+		
+		for i=	targetTeamsCellAddress.Row+1 to targetTeamsCellAddress.Row+TeamsCount
+			teamId = roundSheet.getCellByPosition(0,i).Value
+			if( IsSpecialTeam(teamId ) ) then
+				roundSheet.getCellByPosition(1,i).CellBackColor = RGB(255,255,10)
+			endif
+		next i
+		
+		topLeftAddress =  roundSheet.getCellByPosition(0, 2 ).AbsoluteName
+		
+		rem матрица ответов
+		For j=1 to QuestionsPerRound
+			questionNumberCell = roundSheet.getCellByPosition(j+1, 2 )
+			questionNumberCell.Value = j
+			roundSheet.Columns(j+1).Width = 1000
+		Next j
+		
+		rem подсчет результата
+		roundSheet.getCellByPosition(QuestionsPerRound+2,2).String="За тур"
+		roundSheet.getCellByPosition(QuestionsPerRound+3,2).String="Всего"
+		
+		for i=teamsSourceRangeAddress.StartRow+2 to teamsSourceRangeAddress.EndRow+1
+			rem заполняем формулы суммы за тур
+			cell = roundSheet.getCellByPosition(QuestionsPerRound+2, i)
+			firstResultCell = roundSheet.getCellByPosition(2,i)
+			lastResultCell = roundSheet.getCellByPosition(QuestionsPerRound+1,i)
+			cell.Formula = "=sum(" + firstResultCell.AbsoluteName + ":" + lastResultCell.AbsoluteName + ")"
+
+			rem заполняем формулы Итого
+			totalCell = roundSheet.getCellByPosition(QuestionsPerRound+3, i)
+			totalFormula = "=0"
+			for j=1 to roundNumber
+				roundJTotalCell = Doc.Sheets(j).getCellByPosition(QuestionsPerRound+2, i)
+				totalFormula = totalFormula + " + " + roundJTotalCell.AbsoluteName
+				bottomRightAddress = roundJTotalCell.AbsoluteName
+			next j
+			totalCell.Formula = totalFormula
+	
+			rem заполняем формулы рейтинга		
+		next i
+		
+		
+		rem форматируем таблицу
+		ShowGrid( roundSheet, 0, 2, QuestionsPerRound + 3,  teamsSourceRangeAddress.EndRow+1 )
+		rem SetRangeBackground()
+		
+		barCodeListener = CreateUnoListener( "BarCodeInput_", "com.sun.star.util.XModifyListener" ) 
+		magicCell = roundSheet.getCellByPosition(1,0)
+		magicCell.CellBackColor = RGB(255,30,30)
+		magicCell.addModifyListener( barCodeListener )
+		
+		Doc.getCurrentController.select(magicCell)
+End Sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem создание листа итогов. На входе диапазон со списком команд.
+
+Sub CreateTotalsPage(teamsSourceRangeAddress as Object)
+		Doc = ThisComponent
+		rem новый лист
+		Dim totalSheet as Object
+		sheetName = "Итоги"
+		
+		for i=0 to Doc.Sheets.Count-1
+			if( Doc.Sheets(i).Name = sheetName ) then
+				Doc.Sheets.removeByName( sheetName ) 
+			endif
+		next i
+		totalSheet = Doc.createInstance("com.sun.star.sheet.Spreadsheet")
+		Doc.Sheets.insertByName(sheetName, totalSheet)
+		
+	 	
+		totalSheet.getCellByPosition(0,0).String = roundName
+		
+		rem копируем список команд с первой страницы
+		Dim targetTeamsCellAddress As New com.sun.star.table.CellAddress
+		targetTeamsCellAddress.Sheet = RoundsCount+1
+		targetTeamsCellAddress.Column = 1
+		targetTeamsCellAddress.Row = 2
+		totalSheet.copyRange( targetTeamsCellAddress, teamsSourceRangeAddress )
+		totalSheet.Columns(1).Width = 1000
+		totalSheet.Columns(2).OptimalWidth = true
+		
+		
+	 	totalSheet.Columns(RoundsCount+4).isVisible  = UseRating
+
+		
+		
+		
+		rem подсчет результата
+		for j=1 to RoundsCount
+			totalSheet.getCellByPosition(2 + j,2).String="Тур " + j
+		next j
+		totalSheet.getCellByPosition(3 + RoundsCount,2).String="Всего"
+		if( UseRating )then
+			totalSheet.getCellByPosition(4 + RoundsCount,2).String="Рейтинг"
+		endif
+		totalSheet.getCellByPosition(0,2).String="Место"
+		
+		if( UseSpecialTeams ) then
+			totalSheet.getCellByPosition(5 + RoundsCount,2).String= ThisComponent.Sheets(0).getCellByPosition(5,1).String
+		endif
+		
+		
+		
+		for i=teamsSourceRangeAddress.StartRow+2 to teamsSourceRangeAddress.EndRow+1
+			rem заполняем формулы суммы за тур
+			totalCell = totalSheet.getCellByPosition(3 + RoundsCount, i)
+			
+			rem заполняем формулы Итого
+			totalFormula = "=0"
+			for j=1 to RoundsCount
+				roundJTotalCell = Doc.Sheets(j).getCellByPosition(QuestionsPerRound+2, i)
+				totalFormula = totalFormula + " + " + roundJTotalCell.AbsoluteName
+				roundResultCell = totalSheet.getCellByPosition( j + 2 , i)
+				roundResultCell.Formula = "=" + roundJTotalCell.AbsoluteName
+			next j
+			totalCell.Formula = totalFormula
+			
+	
+			teamId = totalSheet.getCellByPosition(1,i).Value
+			
+			rem заполняем формулы рейтинга
+			raitingCell = totalSheet.getCellByPosition(4 + RoundsCount,i)
+			if( UseRating ) then
+				raitingCell.Value = GetTeamRaiting( teamId )
+			else
+				raitingCell.Value = teamId
+			endif
+
+			
+		next i
+		
+		rem apply sorting
+		sortRange = totalSheet.getCellRangeByPosition(1, 2, 4 + RoundsCount, TeamsCount+2)
+		
+		Dim aSortFields(2) as New com.sun.star.util.SortField
+		Dim aSortDesc(0) as New com.sun.star.beans.PropertyValue
+		
+		rem основной параметр сортировки
+		aSortFields(0).Field = 2 + RoundsCount
+		aSortFields(0).SortAscending = False      'сортируем по поличеству взятых
+		
+		rem дополнительный параметр сортировки
+		aSortFields(1).Field = 3 + RoundsCount 'сортируем по рейтингу
+		aSortFields(1).SortAscending = False
+		
+		aSortDesc(0).Name = "SortFields"
+		aSortDesc(0).Value = aSortFields()
+		sortRange.Sort(aSortDesc()) 
+		
+	   
+	   
+		rem проставляем занятые места
+   		Dim curPosition as Integer
+   		Dim prevAnswers as Integer
+   		Dim curSpecialPosition as Integer
+   		Dim prevSpecialAnswers as Integer
+   		Dim curPositionTitle as String
+   		Dim curSpecialPositionTitle as String
+   		
+   		prevAnswers = -1
+   		prevSpecialAnswers = -1
+   		useRatingLocal = UseRating
+   		
+	   	for i=teamsSourceRangeAddress.StartRow+2 to teamsSourceRangeAddress.EndRow+1
+		
+			teamId = totalSheet.getCellByPosition(1,i).Value
+			curAnswers =  totalSheet.getCellByPosition( RoundsCount + 3,i).Value
+			position=-1	
+			curPosition = curPosition+1	
+			rem номера мест
+			if( useRatingLocal ) then
+				curPositionTitle = ""+curPosition
+			else
+			
+				if not ( prevAnswers=curAnswers) then
+				 	prevAnswers = curAnswers
+					curPositionTitle = GetPositionsForAnswersCount(curAnswers, totalSheet, false)
+				endif
+			endif
+
+
+			positionCell = totalSheet.getCellByPosition( 0,i)
+			positionCell.String = curPositionTitle	
+			
+			
+			rem заполняем места по спецзачету
+			if( IsSpecialTeam(teamId) ) then
+				curSpecialPosition = curSpecialPosition+1
+				
+				if( useRatingLocal ) then
+					curSpecialPositionTitle = "" + curSpecialPosition
+				else
+					if not ( prevSpecialAnswers=curAnswers) then
+					 	prevSpecialAnswers = curAnswers
+						curSpecialPositionTitle = GetPositionsForAnswersCount(prevAnswers, totalSheet, true)
+					endif
+				endif
+
+				positionCell = totalSheet.getCellByPosition( 8,i)
+				positionCell.String = curSpecialPositionTitle	
+			endif
+			
+				
+		next i
+		
+		rightPosition = RoundsCount+4
+		if( UseSpecialTeams ) then
+			rightPosition = rightPosition+1
+		endif
+		
+		ApplyResultsFormating( totalSheet, 0, 2, rightPosition, teamsSourceRangeAddress.EndRow+1)
+		
+End Sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem Признак использования рейтинга для разбора мест. Если нет, то места делятся.
+
+Function UseRating as Boolean
+	testVal = ThisComponent.Sheets(0).getCellByPosition(1,4).String
+	result = ( testVal ="рейтинг" )
+	UseRating = result
+End Function
+
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem Признак использования рейтинга для разбора мест. Если нет, то места делятся.
+
+Function UseSpecialTeams as Boolean
+	result=false
+	for i=2 to TeamsCount
+		if not result then
+			testVal = ThisComponent.Sheets(0).getCellByPosition(5,i).String	
+			if( testVal="да" or testVal="X" or testVal="x"  or testVal="Х" or testVal="х" ) then
+				result = true
+			endif
+		endif
+	next i
+	UseSpecialTeams = result
+End Function
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem Возвращает диапазон мест для заданного кол-ва ответов
+Function GetPositionsForAnswersCount(answersCount as Integer, sheet as object, onlySpecialTeams as Boolean ) as String
+	highPosition = 0
+	lowPosition = 0
+	curTeamPosition = 0
+	value = 100000
+	
+	for i=0 to TeamsCount-1
+		if( onlySpecialTeams ) then
+			teamId =sheet.getCellByPosition(1,i+3).Value
+			if( IsSpecialTeam(teamId ) ) then
+				curTeamPosition = curTeamPosition+1
+				valueCell = sheet.getCellByPosition( RoundsCount+3, i+3 )
+				value = valueCell.Value
+				if( value = answersCount ) then
+					if( highPosition = 0 ) then
+						highPosition = curTeamPosition
+						lowPosition = highPosition
+					else
+						lowPosition = curTeamPosition
+					endif	
+				endif
+			endif
+		else
+			curTeamPosition = curTeamPosition+1
+			valueCell = sheet.getCellByPosition( RoundsCount+3, i+3 )
+			value = valueCell.Value
+			if( value = answersCount ) then
+				if( highPosition = 0 ) then
+					highPosition = curTeamPosition
+					lowPosition = highPosition
+				else
+					lowPosition = curTeamPosition
+				endif
+			endif
+		endif
+		if( value < answersCount ) then
+			 goto endfunc
+		endif
+	next i
+
+	
+endfunc:	
+	if( highPosition = lowPosition ) then
+		GetPositionsForAnswersCount = highPosition
+	else
+		GetPositionsForAnswersCount = "" +  highPosition + "-" + lowPosition + ""
+	endif
+	
+End Function
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem Обработчик события изменения в поле ввода штрих-кода.
+
+Sub BarCodeInput_modified( oEvent )
+on error goto catch	
+
+	Doc = ThisComponent
+
+	rem sheet = Doc.getCurrentController.getActiveSheet
+	cell =   oEvent.Source
+	if( cell.RangeAddress.Sheet = 0 ) then
+		exit sub
+	endif
+	Doc.getCurrentController.select(cell)
+	
+	inputText = cell.String
+	if( inputText="" ) then
+		exit sub
+	endif
+	cell.String = ""
+	
+	roundId =  CInt( Left(inputText,1) )
+	questionId = CInt( Mid(inputText,2,2))
+	teamId = CInt( Mid(inputText,4,2) )
+	
+	if( roundId=0 or questionId=0 or teamId=0 ) then
+		SetMessage(  Doc.getCurrentController.getActiveSheet, "Неверный формат, значение не обработано.")
+		exit sub
+	endif
+	
+	questionsNumber =  Doc.Sheets(0).getCellByPosition(1,2).Value
+	if questionId <1 or questionId>questionsNumber  then
+		SetMessage(  Doc.getCurrentController.getActiveSheet, "Номер вопроса за границами допустимого диапазона.")
+		exit sub
+	endif
+	roundName = "Тур " + roundId
+	if  not ( Doc.getCurrentController.getActiveSheet.Name = roundName ) then 
+		SetMessage( Doc.getCurrentController.getActiveSheet, "Бланк не соответствует номеру тура" )
+		exit sub 
+	endif
+	
+	sheet = Doc.getCurrentController.getActiveSheet
+	questionXPos = questionId+1
+	questionYPos = GetTeamRowNum(teamId )
+	if( questionYPos=-1 ) then
+		SetMessage(  Doc.getCurrentController.getActiveSheet, "Команда с номером " + teamId + " не найдена.")
+		exit sub
+	endif
+	questionCell = sheet.getCellByPosition(questionXpos, questionYPos)
+	questionCell.Value = 1
+	SetMessage( sheet, "Команда '" + sheet.getCellByPosition(1, questionYPos).String + "', Вопрос № " + questionId
+	exit sub
+catch:
+	Reset
+	SetMessage(  Doc.getCurrentController.getActiveSheet, "Неверный формат, значение не обработано.")
+End Sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem выводит сообщение на страницу
+
+Sub SetMessage( sheet as object , msg as String)
+On Error GoTo handler
+	cell = sheet.getCellByPosition(3,0)
+	cell.String = msg
+handler:
+	Reset
+end sub 
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem возвращает имя диапазона по его координатам
+
+function AddressOfRange( sheet, left, top, bottom, right )
+	AddressOfRange = sheet.getCellByPosition(left, top).AbsoluteName + ":" + sheet.getCellByPosition(bottom, right).AbsoluteName
+end function
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem рисует сетку ответов с условным форматированием и шапками
+
+sub ShowGrid( sheet, left, top, right, bottom )
+
+	document = ThisComponent.CurrentController.Frame
+	dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+	
+rem сетка
+	SelectRange( dispatcher, document, sheet, left, top, right, bottom )
+	DrawGridOnCurRange( dispatcher, document )
+
+rem левая колонка
+	SelectRange( dispatcher, document, sheet, left, top, left, bottom )
+	SetColorOfCurRange( dispatcher, document,11776947  )
+
+rem верхняя строка
+	SelectRange( dispatcher, document, sheet, left, top, right, top )
+	SetColorOfCurRange( dispatcher, document,11776947  )
+
+rem колонка результатов за тур
+	SelectRange( dispatcher, document, sheet, right - 1, top, right-1, bottom )
+	SetColorOfCurRange( dispatcher, document,13421772 )
+	
+rem колонка сквозных результатов
+	SelectRange( dispatcher, document, sheet, right, top, right, bottom )
+	SetColorOfCurRange( dispatcher, document, 15132390 )
+	
+rem условное форматирование для правильных/неправильных ответов	
+	dim oCellRange as object, oEntries as object
+	oCellRange = sheet.getCellRangeByName(  AddressOfRange(sheet, left+2, top+1, right-2, bottom ) )
+	oEntries = oCellRange.getPropertyValue("ConditionalFormat")
+	dim oCondition(3) as new com.sun.star.beans.PropertyValue
+	oCondition(0).Name = "Operator"
+	oCondition(0).Value = com.sun.star.sheet.ConditionOperator.EQUAL
+	oCondition(1).Name = "Formula1"
+	oCondition(1).Value = "1"
+	
+	oCondition(2).Name = "StyleName"
+	oCondition(2).Value = "CorrectAnswer"
+	
+	oEntries.addNew(oCondition())
+	oCellRange.setPropertyValue("ConditionalFormat", oEntries)
+		
+end sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+
+sub ApplyResultsFormating( sheet, left, top, right, bottom )
+	
+	document = ThisComponent.CurrentController.Frame
+	dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+	
+	SelectRange( dispatcher, document, sheet, left, top, right, bottom )
+	DrawGridOnCurRange( dispatcher, document )
+	
+	
+	for i=1 to bottom-top
+		altColor = RGB(255,255,255)
+		mainColor = RGB(230,230,230)
+		
+		
+		weight = 100
+		if( i<4 and not UseSpecialTeams ) then
+			altColor = RGB(210,255,210)
+			mainColor = RGB(200,240,200)
+			weight = 200
+		endif	
+		
+		
+		teamId = sheet.getCellByPosition(1,i+top).Value
+		if( IsSpecialTeam( teamId ) ) then
+			altColor = RGB(240,240,20)
+			mainColor =  RGB(255,255,0)
+			'weight = 150
+		endif		
+		
+		curColor = mainColor
+		
+		if( i mod 2) = 1 then
+			curColor = altColor
+		endif
+	
+		for j=0 to right - left
+			cell = sheet.getCellByPosition(j, i+top )
+			cell.CellBackColor = curColor
+			cell.CharWeight = weight
+		next j
+	next i
+	
+	SelectRange( dispatcher, document, sheet, 0,0,0,0 )
+end sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+
+sub SelectRange( dispatcher, document, sheet, left, top, right, bottom )
+	dim args(0) as new com.sun.star.beans.PropertyValue
+	args(0).Name = "ToPoint"
+	args(0).Value = AddressOfRange(sheet, left, top, right, bottom )
+	
+	dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args())
+end sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+rem Играет ли команда в спецзачете.
+function IsSpecialTeam( teamId ) as Boolean
+	teamRowNum = GetTeamRowNum(teamId) - 1 'ищем на исходной странице, индекс смещен
+	testVal = ThisComponent.Sheets(0).getCellByPosition(5,teamRowNum).String
+	IsSpecialTeam = (testVal="да" or testVal="X" or testVal="x"  or testVal="Х" or testVal="х")
+end function
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+
+sub SetColorOfCurRange( dispatcher, document, color )
+	dim args(0) as new com.sun.star.beans.PropertyValue
+	args(0).Name = "BackgroundColor"
+	args(0).Value = color
+	dispatcher.executeDispatch(document, ".uno:BackgroundColor", "", 0, args())
+end sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================
+
+
+sub DrawGridOnCurRange( dispatcher, document )
+	dim args(12) as new com.sun.star.beans.PropertyValue
+	args(0).Name = "OuterBorder.LeftBorder"
+	args(0).Value = Array(0,0,2,0)
+	args(1).Name = "OuterBorder.LeftDistance"
+	args(1).Value = 0
+	args(2).Name = "OuterBorder.RightBorder"
+	args(2).Value = Array(0,0,2,0)
+	args(3).Name = "OuterBorder.RightDistance"
+	args(3).Value = 0
+	args(4).Name = "OuterBorder.TopBorder"
+	args(4).Value = Array(0,0,2,0)
+	args(5).Name = "OuterBorder.TopDistance"
+	args(5).Value = 0
+	args(6).Name = "OuterBorder.BottomBorder"
+	args(6).Value = Array(0,0,2,0)
+	args(7).Name = "OuterBorder.BottomDistance"
+	args(7).Value = 0
+	args(8).Name = "InnerBorder.Horizontal"
+	args(8).Value = Array(0,0,2,0)
+	args(9).Name = "InnerBorder.Vertical"
+	args(9).Value = Array(0,0,2,0)
+	args(10).Name = "InnerBorder.Flags"
+	args(10).Value = 0
+	args(11).Name = "InnerBorder.ValidFlags"
+	args(11).Value = 127
+	args(12).Name = "InnerBorder.DefaultDistance"
+	args(12).Value = 0
+	dispatcher.executeDispatch(document, ".uno:SetBorderStyle", "", 0, args())
+end sub
+
+rem ===============================================================================================
+rem ===============================================================================================
+rem ===============================================================================================

@@ -1,0 +1,135 @@
+﻿<Window x:Class="TournamentFormGenerator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:print="clr-namespace:System.Drawing.Printing;assembly=System.Drawing"
+        xmlns:commonWPF="http://rubenhak.com/common/wpf" 
+        mc:Ignorable="d"
+        Height="360"
+        Width="600"
+        Title="Генератор бланков вопросов ЧГК"
+        DataContext="{Binding Main, Source={StaticResource Locator}}" 
+        xmlns:my="clr-namespace:TournamentFormGenerator.Utils"
+        WindowStartupLocation="CenterScreen" 
+        Icon="/TournamentFormGenerator;component/Skins/MainIcon.ico" ResizeMode="NoResize">
+    <Window.Background>
+        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+            <GradientStop Color="#FF47505B" Offset="0"/>
+            <GradientStop Color="#FF939CA7" Offset="1"/>
+        </LinearGradientBrush>
+    </Window.Background>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Skins/MainSkin.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="MyBooleanToVisibilityConverter" />
+            <my:BoolToOppositeBoolConverter x:Key="BoolToOppositeBoolConverter" />
+        </ResourceDictionary>
+
+    </Window.Resources>
+
+    <Grid x:Name="LayoutRoot" Margin="0,0,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition/>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition  />
+            <ColumnDefinition  />
+        </Grid.ColumnDefinitions>
+
+        <Label Content="Количество туров"  HorizontalAlignment="Left" 
+               VerticalAlignment="Stretch"
+               Grid.Column="0" Grid.Row="0" Margin="5,0,0,0" />
+
+        <Slider Value="{Binding RoundsCount}" Margin="3,3,3,3"
+                HorizontalAlignment="Left" VerticalAlignment="Stretch" 
+                Width="200"   Interval="1" 
+                IsMoveToPointEnabled="True" IsSnapToTickEnabled="True" 
+                SmallChange="1" Minimum="1" Maximum="10"
+                Grid.Column="1" />
+        <Label Content="{Binding RoundsCount}"  HorizontalAlignment="Right" 
+                VerticalAlignment="Stretch" 
+               Grid.Column="1" Grid.Row="0"  />
+
+
+
+        <Label Content="Количество вопросов в туре"  HorizontalAlignment="Left" 
+               Margin="5,0,0,0" VerticalAlignment="Stretch" Grid.Row="1"/>
+        <Slider  Grid.Column="1" Grid.Row="1" Value="{Binding QuestionsPerRound}" 
+                 HorizontalAlignment="Left" VerticalAlignment="Stretch" 
+                 Width="200"  Margin="3,3,3,3" Interval="1" IsMoveToPointEnabled="True" IsSnapToTickEnabled="True" SmallChange="1" Minimum="8" Maximum="18"></Slider>
+        <Label   Grid.Column="1" Grid.Row="1" Content="{Binding QuestionsPerRound}" HorizontalAlignment="Right" Margin="5,0,0,0" VerticalAlignment="Stretch" />
+
+
+
+        <Label Content="Команды"  HorizontalAlignment="Left" 
+               Margin="5,0,0,0" VerticalAlignment="Stretch" Grid.Row="2"/>
+
+        <StackPanel Orientation="Horizontal" 
+                    Grid.Column="1" Grid.Row="2" 
+                    HorizontalAlignment="Stretch"  
+                    VerticalAlignment="Stretch" Margin="3,3,3,3" >
+            <Label Content="c"></Label>
+            <TextBox Width="95"  commonWPF:TextBoxMaskBehavior.Mask="Integer"
+                     commonWPF:TextBoxMaskBehavior.MinimumValue="1"
+                     commonWPF:TextBoxMaskBehavior.MaximumValue="99" 
+                     Text="{Binding TeamsRangeBegin}" ></TextBox>
+            <Label Content="по"></Label>
+            <TextBox Width="95" commonWPF:TextBoxMaskBehavior.Mask="Integer"
+                     commonWPF:TextBoxMaskBehavior.MinimumValue="1"
+                     commonWPF:TextBoxMaskBehavior.MaximumValue="99" 
+                     Text="{Binding TeamsRangeEnd}"></TextBox>
+        </StackPanel>
+
+        <Label Content="Принтер"  HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Stretch" Grid.Row="3"/>
+        <ComboBox HorizontalAlignment="Stretch" 
+                  Grid.Column="1" Grid.Row="3"
+                  DataContext="{Binding Printers, Source={StaticResource Locator}}" 
+                  ItemsSource="{Binding}" 
+                  SelectedItem="{Binding Main.TargetPrinter, Source={StaticResource Locator}}"
+                  >
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}"></TextBlock>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <Label Content="Шаблон заголовка бланка"  HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Stretch" Grid.Row="4"/>
+        <TextBox Text="{Binding ItemHeaderTemplate}" Grid.Column="1"  Grid.Row="4" MaxLength="100" Margin="5" />
+
+        <Label Content="Группировка"  HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Stretch" Grid.Row="5"/>
+        <StackPanel Grid.Column="1" Grid.Row="5"  VerticalAlignment="Stretch" Orientation="Horizontal" >
+            <RadioButton Content="По командам"  IsChecked="{Binding Converter={StaticResource BoolToOppositeBoolConverter}, Path=GroupByQuestion}" Margin="4,4,4,4" GroupName="Grouping"></RadioButton>
+            <RadioButton Content="По вопросам"  IsChecked="{Binding GroupByQuestion}" Margin="4,4,4,4" GroupName="Grouping"></RadioButton>
+        </StackPanel>
+
+
+
+        <Label Content="Расположение бланков на листе"  HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Stretch" Grid.Row="6"/>
+        <StackPanel Grid.Column="1" Grid.Row="6"  VerticalAlignment="Stretch" Orientation="Horizontal" >
+            <RadioButton Content="3x6"  IsChecked="{Binding Converter={StaticResource BoolToOppositeBoolConverter}, Path=UseSize_4x9}" Margin="4,4,4,4" GroupName="Size"></RadioButton>
+            <RadioButton Content="4x9"  IsChecked="{Binding UseSize_4x9}" Margin="4,4,4,4" GroupName="Size"></RadioButton>
+        </StackPanel>
+
+
+
+        <Button Grid.Row="7"  Content="Печатать бланки" 
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+             Grid.Column="1"
+                Command="{Binding PrintCommand}" ToolTip="Отправляет бланки на печать на выбранный принтер"></Button>
+        <Button  Grid.Row="7" Content="Сохранить таблицу учета" 
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                Command="{Binding OpenSpreadsheetCommand}" ToolTip="Сохраняет незаполненный шаблон таблицы учета результатов"></Button>
+
+    </Grid>
+</Window>
